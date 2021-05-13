@@ -17,14 +17,15 @@ wall_thickness=2; // [0.5:10]
 /* [Constants (don't touch these)] */
 front_w=107;
 front_hole_cc=84;
-back_w=113;
-base_len=135;
+back_w=123;
+base_len=145;
 platform_h=200;
 corner_radius=15;
+pin_diameter=8;
 
 wrist_rest_front_w=110;
 wrist_rest_back_w=90;
-wrist_rest_len=80;
+wrist_rest_len=90;
 
 $fn = 100;
 
@@ -119,13 +120,13 @@ module cut_pins() {
 module mount_pins() {
 	// left
 	cut_pins()
-		translate([-front_hole_cc/2, base_len/2-corner_radius, 0])
-			cylinder(platform_h+4, d=7.5);
+		translate([-front_hole_cc/2, base_len/2-corner_radius+4, 0])
+			cylinder(platform_h+4, d=pin_diameter);
 
 	// right
 	cut_pins()
-		translate([front_hole_cc/2, base_len/2-corner_radius, 0])
-			cylinder(platform_h+4, d=7.5);
+		translate([front_hole_cc/2, base_len/2-corner_radius+4, 0])
+			cylinder(platform_h+4, d=pin_diameter);
 }
 
 module corner_box(left=true) {
