@@ -134,7 +134,7 @@ module corner_box(left=true) {
 		solid_model();
 
 		on_top_plane()
-			translate([left ? -front_hole_cc/2 : front_hole_cc/2, base_len/2, platform_h+50])
+			translate([left ? -front_hole_cc/2 : front_hole_cc/2, base_len/2, platform_h+53])
 				rotate([40, 0, left ? 45 : -45])
 					cube([90, 90, 1000], center=true);
 	}
