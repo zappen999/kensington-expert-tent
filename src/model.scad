@@ -1,17 +1,30 @@
-// Params
-with_wrist_rest=true;
-roll_angle=-15;
-pitch_angle=15;
-base_height=0;
-wall_thickness=2;
+// Whether or not to include support for wrist rest
+wrist_rest=true;
 
-// Constants (may mess up model)
+// The side-to-side angle of the spacer
+roll_angle=15; // [-40:40]
+
+// The back/forth angle of the spacer
+pitch_angle=-10; // [-30:0]
+
+// Height of lowest point from the surface
+base_height=2; // [0:20]
+
+// Wall thickness
+wall_thickness=2; // [0.5:10]
+
+// ------------------------------------
+/* [Constants (don't touch these)] */
 front_w=107;
 front_hole_cc=84;
 back_w=113;
-platform_l=135;
+base_len=135;
 platform_h=200;
 corner_radius=15;
+
+wrist_rest_front_w=110;
+wrist_rest_back_w=90;
+wrist_rest_len=80;
 
 $fn = 100;
 
@@ -22,18 +35,30 @@ module rotate_about_pt(x, y, z, pt) {
 				children();
 }
 
-module rounded_four_square(front_width, back_width, length, height, corner_rad) {
+module shape(front_width, back_width, length, height, corner_rad, shrink_offset=0) {
 	minkowski() {
+		offs=corner_rad+shrink_offset;
+		front_left=[-(front_width/2)+offs, (length/2)-offs];
+		front_right=[(front_width/2)-offs, (length/2)-offs];
+		back_right=[(back_width/2)-offs, -(length/2)+offs];
+		back_left=[-(back_width/2)+offs, -(length/2)+offs];
+
+		back_right_rest=[(wrist_rest_back_w/2)-offs, -(length/2)-(wrist_rest_len/2)+offs];
+		back_left_rest=[-(wrist_rest_back_w/2)+offs, -(length/2)-(wrist_rest_len/2)+offs];
+
 		linear_extrude(height, center=true)
-			polygon([
-					// front left
-					[-(front_width/2)+corner_rad, (length/2)-corner_rad],
-					// front right
-					[(front_width/2)-corner_rad, (length/2)-corner_rad],
-					// back right
-					[(back_width/2)-corner_rad, -(length/2)+corner_rad],
-					// back left
-					[-(back_width/2)+corner_rad, -(length/2)+corner_rad],
+			polygon(wrist_rest ? [
+				front_left,
+				front_right,
+				back_right,
+				back_right_rest,
+				back_left_rest,
+				back_left,
+			] : [
+				front_left,
+				front_right,
+				back_right,
+				back_left,
 			]);
 		cylinder(height, r=corner_rad, center=true);
 	}
@@ -41,14 +66,15 @@ module rounded_four_square(front_width, back_width, length, height, corner_rad) 
 
 module hollow_shape() {
 	difference() {
-		rounded_four_square(front_w, back_w, platform_l, platform_h, corner_radius);
+		shape(front_w, back_w, base_len, platform_h, corner_radius);
 		translate([0, 0, -0.1])
-			rounded_four_square(
-				front_w-(wall_thickness*2),
-				back_w-(wall_thickness*2),
-				platform_l-(wall_thickness*2),
+			shape(
+				front_w,
+				back_w,
+				base_len,
 				platform_h+10,
-				corner_radius-wall_thickness
+				corner_radius,
+				wall_thickness
 			);
 	}
 }
@@ -63,19 +89,22 @@ module cut_box() {
 }
 
 module on_top_plane() {
-	rotate_about_pt(roll_angle, pitch_angle, 0, [front_w/2, platform_l/2])
+	x_origin=roll_angle < 0 ? -front_w/2 : front_w/2;
+	y_origin=base_len/2;
+
+	rotate_about_pt(pitch_angle, roll_angle, 0, [x_origin, y_origin])
 		translate([0, 0, -platform_h+base_height])
 			children();
-}
-
-module solid_model() {
-	on_top_plane()
-		rounded_four_square(front_w, back_w, platform_l, platform_h, corner_radius);
 }
 
 module model() {
 	on_top_plane()
 		hollow_shape();
+}
+
+module solid_model() {
+	on_top_plane()
+		shape(front_w, back_w, base_len, platform_h, corner_radius);
 }
 
 module cut_pins() {
@@ -88,18 +117,15 @@ module cut_pins() {
 }
 
 module mount_pins() {
-	cut_pins() {
-		// left
-		translate([-front_hole_cc/2, platform_l/2-corner_radius, 0]) {
+	// left
+	cut_pins()
+		translate([-front_hole_cc/2, base_len/2-corner_radius, 0])
 			cylinder(platform_h+4, d=7.5);
-		}
-	}
 
-	cut_pins() {
-		// right
-		translate([front_hole_cc/2, platform_l/2-corner_radius, 0])
+	// right
+	cut_pins()
+		translate([front_hole_cc/2, base_len/2-corner_radius, 0])
 			cylinder(platform_h+4, d=7.5);
-	}
 }
 
 module corner_box(left=true) {
@@ -107,7 +133,7 @@ module corner_box(left=true) {
 		solid_model();
 
 		on_top_plane()
-			translate([left ? -front_hole_cc/2 : front_hole_cc/2, platform_l/2, platform_h+50])
+			translate([left ? -front_hole_cc/2 : front_hole_cc/2, base_len/2, platform_h+50])
 				rotate([40, 0, left ? 45 : -45])
 					cube([90, 90, 1000], center=true);
 	}
