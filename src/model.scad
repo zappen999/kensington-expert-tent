@@ -2,16 +2,16 @@
 wrist_rest=true;
 
 // The side-to-side angle of the spacer
-roll_angle=15; // [-40:40]
+roll_angle=8; // [-40:40]
 
 // The back/forth angle of the spacer
-pitch_angle=-10; // [-30:0]
+pitch_angle=-8; // [-30:0]
 
 // Height of lowest point from the surface
 base_height=2; // [0:20]
 
 // Wall thickness
-wall_thickness=2; // [0.5:10]
+wall_thickness=3; // [0.5:10]
 
 // ------------------------------------
 /* [Constants (don't touch these)] */
